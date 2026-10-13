@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cronómetro de trabajos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ebee;--card:#fff;--ink:#172026;--mute:#5a6872;--line:#d3d9de;--steel:#1f2a31;--yel:#ffc400;--run:#0f9d78;--pause:#f08c00;--idle:#6f7f89;--done:#2f5bd8;--warn:#c62828;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1418;--card:#1a242a;--ink:#f1f5f7;--mute:#9fb0b8;--line:#2f3f47;--run:#22c19a;--pause:#ffa526;--idle:#7d8f99;--done:#6f94ff;--warn:#ff7b72}}
+:root[data-theme="dark"]{--bg:#0e1418;--card:#1a242a;--ink:#f1f5f7;--mute:#9fb0b8;--line:#2f3f47;--run:#22c19a;--pause:#ffa526;--idle:#7d8f99;--done:#6f94ff;--warn:#ff7b72}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 Archivo,system-ui,sans-serif}
+main{max-width:1120px;margin:0 auto;padding:16px 14px 60px}
+.hero{background:var(--steel);color:#fff;border-radius:18px 18px 0 0;padding:20px 20px 16px;display:flex;align-items:center;gap:14px}
+.hero .ic{font-size:2.4rem;background:var(--yel);color:#172026;border-radius:14px;width:62px;height:62px;display:grid;place-items:center;flex:none}
+h1{font-size:clamp(1.5rem,6vw,2.1rem);font-weight:800;margin:0;line-height:1.1}
+.hero p{margin:4px 0 0;color:#b9c6cd;font-size:.95rem}
+.stripe{height:14px;border-radius:0 0 18px 18px;background:repeating-linear-gradient(-45deg,var(--yel) 0 14px,#172026 14px 28px);margin-bottom:16px}
+h2{font-size:1.3rem;font-weight:800;margin:34px 0 10px;display:flex;align-items:center;gap:8px}
+h2::before{content:"";width:8px;height:1.2em;background:var(--yel);border-radius:3px}
+input,button{font:inherit;color:inherit}
+input{background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+input:focus{border-color:var(--done);background:var(--card)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--done);outline-offset:2px}
+button{cursor:pointer;border:0;background:var(--steel);color:#fff;border-radius:12px;padding:12px 16px;font-weight:800;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+button:active{transform:translateY(2px);box-shadow:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border-radius:14px;padding:10px 12px;border-bottom:5px solid var(--idle);box-shadow:0 4px 12px rgba(20,32,38,.1)}
+.stat:nth-child(1){border-color:var(--done)}.stat:nth-child(2){border-color:var(--run)}.stat:nth-child(3){border-color:var(--yel)}
+.stat b{display:block;font-size:1.9rem;line-height:1.1}.stat span{font-size:.85rem;color:var(--mute)}
+.new{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--card);border-radius:16px;padding:16px;border-top:6px solid var(--yel);box-shadow:0 6px 18px rgba(20,32,38,.12)}
+.new label{display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:.95rem}
+.new .full{grid-column:1/-1}.new input{font-size:1.05rem;font-weight:400}
+.new button{background:var(--yel);color:#172026;font-size:1.1rem;padding:15px;box-shadow:0 4px 0 #b88f00}
+@media (max-width:560px){.new{grid-template-columns:1fr}}
+.sum{background:var(--card);border-radius:14px;padding:14px 16px;margin-top:16px;border-left:8px solid var(--run);box-shadow:0 6px 18px rgba(20,32,38,.12)}
+.sum b{color:var(--run)}
+.job{background:var(--card);border-radius:18px;margin-top:18px;overflow:hidden;box-shadow:0 8px 22px rgba(20,32,38,.16)}
+.head{background:linear-gradient(135deg,var(--idle),#4f5f69);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.job.run .head{background:linear-gradient(135deg,var(--run),#0a6e54)}.job.pau .head{background:linear-gradient(135deg,var(--pause),#c26a00)}
+.name{font-weight:800;font-size:1.35rem;word-break:break-word;line-height:1.2}
+.sub{margin-top:6px;font-size:.95rem;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tag{display:inline-block;border-radius:8px;padding:1px 10px;font-weight:800;color:#fff;border:2px solid rgba(255,255,255,.85);background:#6b7280}
+.t-a{background:#c2410c}.t-p{background:#1d4ed8}.t-g{background:#475569}
+.state{font-weight:800;font-size:.9rem;white-space:nowrap;background:rgba(0,0,0,.28);padding:5px 12px;border-radius:99px}
+.job.run .state::first-letter{animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.body{padding:14px 16px 16px}
+.time{background:#0f171c;border-radius:14px;text-align:center;padding:10px 6px;font-size:clamp(3rem,15vw,4.8rem);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;line-height:1.1;color:#8fa1ab;box-shadow:inset 0 3px 10px rgba(0,0,0,.6)}
+.job.run .time{color:#35e0b4;text-shadow:0 0 16px rgba(53,224,180,.45)}.job.pau .time{color:#ffb84d}
+.lbl{font-weight:800;margin:16px 0 8px}
+.people{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;gap:8px;align-items:center;background:var(--bg);border-radius:99px;padding:4px 6px 4px 4px;font-weight:600}
+.av{font-style:normal;width:30px;height:30px;border-radius:50%;background:var(--done);color:#fff;display:grid;place-items:center;font-weight:800}
+.chip button{background:none;box-shadow:none;padding:2px 8px;font-size:1.2rem;line-height:1;color:var(--warn)}
+.none{color:var(--mute)}
+.story{margin-top:12px;background:var(--bg);border-left:6px solid var(--done);border-radius:10px;padding:8px 12px;font-size:.92rem}
+.story p{margin:4px 0}.story ul{margin:6px 0 0;padding-left:18px;color:var(--mute);font-size:.85rem}
+#jobs.g4 .story{font-size:.8rem}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.rank{position:sticky;top:12px;background:var(--card);border-radius:18px;padding:14px 16px 16px;box-shadow:0 8px 22px rgba(20,32,38,.16);border-top:6px solid var(--yel)}
+.rank h2{margin:0 0 6px;font-size:1.15rem}
+.rtotal{font-weight:800;color:var(--done);margin-bottom:10px}
+.rl{list-style:none;margin:0;padding:0;display:grid;gap:12px;max-height:60vh;overflow:auto}
+.rl li{display:flex;gap:10px;align-items:flex-start}
+.pos{flex:none;width:30px;height:30px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:800}
+.rl li:first-child .pos{background:var(--yel);color:#172026}
+.rw{flex:1;min-width:0}.rt{display:flex;justify-content:space-between;gap:8px}
+.rt b{overflow-wrap:anywhere}.rms{font-variant-numeric:tabular-nums;font-weight:800}
+.meter{height:8px;background:var(--bg);border-radius:9px;overflow:hidden;margin:4px 0}.meter i{display:block;height:100%;background:var(--done);border-radius:9px}
+.rs{font-size:.82rem;color:var(--mute)}.rs.run{color:var(--run);font-weight:800}.rs.pau{color:var(--pause);font-weight:800}
+.rr{margin-top:12px;width:100%;background:var(--bg);color:var(--ink);box-shadow:none;border:2px solid var(--line)}
+.views{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.views span{font-weight:800}
+.views button{background:var(--card);color:var(--ink);border:2px solid var(--line);box-shadow:none;padding:8px 14px}
+.views button.on{background:var(--steel);color:#fff;border-color:var(--steel)}
+#jobs.g2,#jobs.g3,#jobs.g4{display:grid;gap:14px;margin-top:14px;align-items:start}
+#jobs.g2{grid-template-columns:repeat(2,minmax(0,1fr))}#jobs.g3{grid-template-columns:repeat(3,minmax(0,1fr))}#jobs.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+#jobs.g2 .job,#jobs.g3 .job,#jobs.g4 .job{margin-top:0}
+#jobs .empty{grid-column:1/-1}
+#jobs.g2 .time{font-size:clamp(2.2rem,5vw,3rem)}
+#jobs.g3 .time,#jobs.g4 .time{font-size:clamp(1.6rem,3vw,2.3rem);padding:6px 4px}
+#jobs.g3 .name,#jobs.g4 .name{font-size:1.05rem}
+#jobs.g3 .hint,#jobs.g4 .hint{display:none}
+#jobs.g3 .body,#jobs.g4 .body{padding:10px}
+#jobs.g3 .head,#jobs.g4 .head{padding:10px;flex-wrap:wrap}
+#jobs.g3 .thumb,#jobs.g4 .thumb{width:46px;height:46px}
+#jobs.g3 .acts button,#jobs.g4 .acts button{padding:11px 4px;font-size:.88rem}
+#jobs.g4 .state{font-size:.75rem;padding:3px 8px}
+#jobs.g4 .chip{font-size:.85rem}#jobs.g4 .av{width:24px;height:24px}
+#jobs.g4 .addp button{padding:10px}#jobs.g4 .lbl{margin:10px 0 6px;font-size:.9rem}
+.layout.wide{grid-template-columns:1fr}.layout.wide .rank{order:-1;position:static}.layout.wide .rl{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));max-height:220px}
+@media (max-width:600px){#jobs.g3,#jobs.g4{grid-template-columns:repeat(2,minmax(0,1fr))}#jobs.g2 .time,#jobs.g3 .time,#jobs.g4 .time{font-size:1.9rem}}
+@media (max-width:900px){.layout{grid-template-columns:1fr}.rank{order:-1;position:static}.rl{max-height:40vh}}.chip button[data-mv]{color:var(--done);font-size:1.05rem}
+.addp{display:flex;gap:8px;margin-top:12px}.addp input{flex:1}
+.addp button{background:var(--done);white-space:nowrap}
+.hint{font-size:.85rem;color:var(--mute);margin-top:6px}
+.acts{display:flex;gap:10px;margin-top:16px}
+.acts button{flex:1;padding:17px;font-size:1.12rem;border-radius:14px}
+.go{background:var(--run)!important;box-shadow:0 4px 0 #0a6e54!important}
+.job.run .go{background:var(--pause)!important;box-shadow:0 4px 0 #b36200!important}
+.ok{background:var(--done)!important;box-shadow:0 4px 0 #1f3f9c!important}
+.ph{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.th{position:relative}.thumb{width:76px;height:76px;object-fit:cover;border-radius:10px;border:2px solid var(--line);cursor:zoom-in;display:block}.th button{position:absolute;top:-7px;right:-7px;width:26px;height:26px;padding:0;border-radius:50%;background:var(--warn);box-shadow:none;line-height:1}.pic{cursor:pointer;background:var(--steel);color:#fff;font-weight:800;border-radius:12px;padding:14px 16px;box-shadow:0 3px 0 rgba(0,0,0,.25)}.pic:focus-within{outline:3px solid var(--done)}.dlg .big-img{width:calc(100% - 40px);border-radius:10px}table .thumb{width:44px;height:44px;display:inline-block;margin-right:4px}.dlg .thumb{cursor:default}
+.empty{color:var(--mute);padding:20px;text-align:center;background:var(--card);border-radius:14px;border:2px dashed var(--line);margin-top:16px}
+.wrap{overflow-x:auto;border-radius:14px;box-shadow:0 4px 14px rgba(20,32,38,.1)}
+table{border-collapse:collapse;width:100%;background:var(--card)}
+th,td{padding:11px 13px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{background:var(--steel);color:#fff}tr:nth-child(even) td{background:var(--bg)}
+td:last-child{font-variant-numeric:tabular-nums;font-weight:800;color:var(--done)}
+.bar{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.bar button:first-child{background:var(--run)}
+.veil{position:fixed;inset:0;background:rgba(8,14,17,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.dlg{background:var(--card);border-radius:18px;max-width:470px;width:100%;max-height:90%;overflow:auto;padding:0 0 18px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.dlg>*{margin-left:20px;margin-right:20px}
+.dlg h3{margin:0 0 12px;padding:14px 20px;background:var(--steel);color:#fff;font-size:1.25rem;border-bottom:8px solid var(--yel)}
+.dlg .big{font-size:2.8rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--done);line-height:1.1}
+.dlg dl{margin-top:10px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px}
+.dlg dt{color:var(--mute)}.dlg dd{margin:0;font-weight:800;word-break:break-word}
+.q{font-size:1.2rem;line-height:1.5}
+.warnbox{background:var(--bg);border-left:6px solid var(--pause);padding:10px 12px;border-radius:8px;margin-top:10px;margin-bottom:10px}
+.dbtn{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}.dbtn button{flex:1;min-width:130px;padding:15px;font-size:1.05rem}
+.dbtn .y{background:var(--done)}
+@media (prefers-reduced-motion:no-preference){.sum,.dlg{animation:in .22s ease-out}@keyframes in{from{opacity:0;transform:translateY(-8px)}}}
+@media (prefers-reduced-motion:reduce){.job.run .state::first-letter{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero"><div class="ic" aria-hidden="true">⏱</div><div><h1>Cronómetro de trabajos</h1><p>Tiempos, personal y entregas en un solo lugar</p></div></header><div class="stripe"></div>
+  <div class="stats">
+    <div class="stat"><b id="s1">0</b><span>Trabajos activos</span></div>
+    <div class="stat"><b id="s2">0</b><span>En curso ahora</span></div>
+    <div class="stat"><b id="s3">0</b><span>Terminados</span></div>
+  </div>
+  <div class="layout"><div class="col">
+  <div class="new">
+    <label class="full">Nombre del trabajo<input id="nj" placeholder="Ej: Trabajo X, vigas, etc." maxlength="80"></label>
+    <label>Tipo<input id="nt" list="tipos" placeholder="Elige o escribe" maxlength="40"></label>
+    <datalist id="tipos"><option value="Arenado"><option value="Pintado"><option value="Granallado"></datalist>
+    <label>A nombre de (persona o empresa que recibe)<input id="nc" placeholder="Ej: Empresa ABC" maxlength="80"></label>
+    <button id="add" class="full">+ Crear trabajo</button>
+  </div>
+  <div id="sum"></div>
+  <div class="views" role="group" aria-label="Tamaño de las tarjetas"><span>Vista:</span><button data-v="1">1 por fila</button><button data-v="2">2 × 2</button><button data-v="3">3 × 3</button><button data-v="4">4 × 4</button></div>
+  <div id="jobs"></div>
+  <h2>Historial de trabajos terminados</h2>
+  <div id="log"></div>
+  <div class="bar">
+    <button id="copy">Copiar para Google Sheets</button>
+    <button id="clr">Vaciar historial</button>
+    <span class="hint" id="msg">Copia y pega con Ctrl+V en la celda A1 de tu hoja.</span>
+  </div>
+  </div>
+  <aside class="rank" aria-label="Clasificación del personal"><h2>Clasificación del personal</h2><div class="rtotal" id="rtot"></div><ol class="rl" id="rl"></ol><button id="rr" class="rr">Reiniciar tiempos</button></aside>
+  </div>
+</main>
+<div id="modal"></div>
+<script>
+let jobs=[],log=[],roster={};
+try{const s=JSON.parse(localStorage.getItem('crono')||'null');if(s){jobs=s.jobs||[];log=s.log||[];roster=s.roster||{}}}catch(e){}
+const $=id=>document.getElementById(id);
+const save=()=>{try{localStorage.setItem('crono',JSON.stringify({jobs,log,roster}))}catch(e){$('sum').innerHTML='<div class="sum">El almacenamiento del navegador está lleno: las fotos nuevas no se conservarán al recargar.</div>'}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>s.trim().replace(/\s+/g,' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const tc=t=>{t=norm(t||'');return t.includes('aren')?'a':t.includes('pint')?'p':t.includes('gran')?'g':'o'};
+const thumbs=(a,id)=>a.map(f=>`<span class="th"><img class="thumb" src="${f.d}" alt="Evidencia">${id?`<button data-rmf="${id}:${f.id}" aria-label="Quitar foto">×</button>`:''}</span>`).join('');
+const el=j=>j.acc+(j.start?Date.now()-j.start:0);
+const fmt=ms=>{const t=Math.floor(ms/1000);return [Math.floor(t/3600),Math.floor(t%3600/60),t%60].map(n=>String(n).padStart(2,'0')).join(':')};
+const words=ms=>{const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return [h&&h+' h',m&&m+' min',(s||!(h||m))&&s+' s'].filter(Boolean).join(' ')};
+const find=id=>jobs.find(j=>j.id===id);
+function settle(j,now=Date.now()){if(!j.start)return;const d=now-(j.mark||j.start);if(d>0)j.people.forEach(p=>{const k=norm(p);(roster[k]=roster[k]||{name:p,ms:0}).ms+=d;const a=(j.ap=j.ap||{});(a[k]=a[k]||{name:p,ms:0}).ms+=d});j.mark=now}
+function enter(j,v,from){const k=norm(v);j.ap=j.ap||{};j.ap[k]=j.ap[k]||{name:v,ms:0};(j.ev=j.ev||[]).push({k:'in',name:v,at:el(j),from:from||''})}
+function leave(j,v,to){(j.ev=j.ev||[]).push({k:'out',name:v,at:el(j),to:to||''})}
+const hasMove=j=>(j.ev||[]).some(e=>e.from||e.to);
+const apTxt=j=>{const a=Object.values(j.ap||{});return a.length?a.map(x=>x.name+' ('+words(x.ms)+')').join(', '):j.people.join(', ')};
+const apTxtR=r=>(r.aporte&&r.aporte.length?r.aporte.map(x=>x.name+' ('+words(x.ms)+')'):r.people).join(', ');
+function storyHTML(j){
+  const tot=el(j),ap=Object.values(j.ap||{}),tol=2500,here=new Set(j.people.map(norm));
+  const part=ap.filter(a=>a.ms<tot-tol),full=ap.filter(a=>a.ms>=tot-tol);let h='';
+  if(full.length&&part.length)h+=`<p>El resto del equipo (<b>${esc(full.map(a=>a.name).join(', '))}</b>) hizo todo el trabajo en <b>${words(tot)}</b>.</p>`;
+  part.forEach(a=>{h+=`<p>↪ <b>${esc(a.name)}</b> apoyó <b>${words(a.ms)}</b> del total de este trabajo ${here.has(norm(a.name))?'(sigue aquí)':'(ya salió)'}.</p>`});
+  const ev=(j.ev||[]).slice(-4).reverse().map(e=>e.k==='in'?`<li>▶ ${esc(e.name)} entró${e.from?' desde «'+esc(e.from)+'»':''} · cronómetro en ${fmt(e.at)}</li>`:`<li>◀ ${esc(e.name)} salió${e.to?' hacia «'+esc(e.to)+'»':''} · cronómetro en ${fmt(e.at)}</li>`).join('');
+  return h+(ev?`<ul>${ev}</ul>`:'');
+}
+function renderRank(){
+  const cur={};jobs.forEach(j=>j.people.forEach(p=>cur[norm(p)]=j));
+  const rows=Object.entries(roster).map(([k,r])=>({name:r.name,ms:r.ms,j:cur[k]})).filter(r=>r.ms>0||r.j).sort((a,b)=>b.ms-a.ms);
+  const tot=rows.reduce((a,r)=>a+r.ms,0),mx=rows.length&&rows[0].ms||1;
+  $('rtot').textContent=rows.length?'Total horas-hombre: '+fmt(tot):'';
+  $('rl').innerHTML=rows.length?rows.map((r,i)=>{const st=r.j?(r.j.start?['run','● Trabajando en «'+r.j.name+'»']:['pau','❚❚ En pausa en «'+r.j.name+'»']):['','Libre'];
+    return `<li><span class="pos">${i+1}</span><div class="rw"><div class="rt"><b>${esc(r.name)}</b><span class="rms">${fmt(r.ms)}</span></div><div class="meter"><i style="width:${Math.round(r.ms/mx*100)}%"></i></div><div class="rs ${st[0]}">${esc(st[1])}</div></div></li>`}).join(''):'<li class="none">Aún no hay tiempos. Agrega personas a un trabajo e inicia el cronómetro.</li>';
+}
+
+function dialog(html,btns){
+  $('modal').innerHTML=`<div class="veil"><div class="dlg" role="dialog" aria-modal="true">${html}<div class="dbtn">${btns.map((b,i)=>`<button class="${b.cls||''}" data-d="${i}">${b.t}</button>`).join('')}</div></div></div>`;
+  $('modal').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;$('modal').innerHTML='';btns[+b.dataset.d].f&&btns[+b.dataset.d].f()};
+  const bs=$('modal').querySelectorAll('button');if(bs.length)bs[bs.length-1].focus();
+}
+function render(){
+  renderRank();
+  $('s1').textContent=jobs.length;$('s2').textContent=jobs.filter(j=>j.start).length;$('s3').textContent=log.length;
+  $('jobs').innerHTML=jobs.length?jobs.map(j=>{const c=j.start?'run':(j.acc?'pau':'');return `
+  <section class="job ${c}">
+    <div class="head"><span><span class="name">${esc(j.name)}</span><div class="sub"><span class="tag t-${tc(j.tipo)}">${esc(j.tipo||'Sin tipo')}</span><span>A nombre de: <b>${esc(j.cliente||'—')}</b></span></div></span><span class="state">${j.start?'● En curso':(j.acc?'❚❚ En pausa':'○ Sin iniciar')}</span></div>
+    <div class="body">
+      <div class="time" data-t="${j.id}">${fmt(el(j))}</div>
+      <div class="lbl">Involucrados (${j.people.length})</div>
+      <div class="people">${j.people.length?j.people.map((p,i)=>`<span class="chip"><i class="av">${esc(p.trim()[0].toUpperCase())}</i>${esc(p)}<button data-mv="${j.id}:${i}" aria-label="Mover ${esc(p)} a otro trabajo" title="Mover a otro trabajo">⇄</button><button data-rm="${j.id}:${i}" aria-label="Quitar ${esc(p)}">×</button></span>`).join(''):'<span class="none">Nadie agregado todavía</span>'}</div>
+      ${hasMove(j)?'<div class="story" data-s="'+j.id+'"><b>Historia del trabajo</b>'+storyHTML(j)+'</div>':''}
+      <div class="addp"><input data-pp="${j.id}" placeholder="Nombre de la persona" aria-label="Agregar involucrado" maxlength="40"><button data-ap="${j.id}">+ Agregar ↵</button></div>
+      <div class="hint">Escribe el nombre y presiona + o la tecla Enter. Una persona solo puede estar en un trabajo a la vez.</div>
+      <div class="lbl">Evidencia (${(j.fotos||[]).length}/6 fotos)</div><div class="ph">${thumbs(j.fotos||[],j.id)}<label class="pic">📷 Agregar foto<input type="file" accept="image/*" multiple hidden data-ph="${j.id}"></label></div><div class="hint">Las fotos quedan como evidencia del trabajo. El enlace para enviarlas se genera al conectar con Drive.</div>
+      <div class="acts"><button class="go" data-go="${j.id}">${j.start?'❚❚ Pausar':(j.acc?'▶ Continuar':'▶ Iniciar')}</button><button class="ok" data-ok="${j.id}">✓ Finalizar</button></div>
+    </div>
+  </section>`}).join(''):'<p class="empty">Aún no hay trabajos activos. Escribe un nombre arriba y crea el primero.</p>';
+  $('log').innerHTML=log.length?`<div class="wrap"><table><thead><tr><th>Fecha</th><th>Trabajo</th><th>Tipo</th><th>A nombre de</th><th>Involucrados</th><th>Evidencia</th><th>Tiempo</th></tr></thead><tbody>${log.map(r=>`<tr><td>${esc(r.fecha)}</td><td>${esc(r.name)}</td><td>${esc(r.tipo||'—')}</td><td>${esc(r.cliente||'—')}</td><td>${esc(apTxtR(r)||'—')}</td><td>${(r.fotos||[]).length?thumbs(r.fotos):'—'}</td><td>${fmt(r.ms)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">Cuando finalices un trabajo aparecerá aquí.</p>';
+}
+function addJob(){const n=$('nj').value.trim();if(!n){$('nj').focus();return}
+  jobs.unshift({id:Date.now().toString(36),name:n,tipo:$('nt').value.trim(),cliente:$('nc').value.trim(),people:[],acc:0,start:null});$('nj').value=$('nt').value=$('nc').value='';save();render()}
+$('add').onclick=addJob;
+['nj','nt','nc'].forEach(i=>$(i).onkeydown=e=>{if(e.key==='Enter')addJob()});
+
+function askMove(v,from,to){
+  const k=norm(v);
+  dialog(`<h3>⚠ Aviso antes de trasladar</h3><p class="q">¿Desea sacar a <b>${esc(v)}</b> del trabajo <b>«${esc(from.name)}»</b> y pasarla al nuevo trabajo <b>«${esc(to.name)}»</b>?</p><div class="warnbox">Estaba en: ${esc(from.tipo||'sin tipo')} · ${from.start?'en curso':'en pausa o sin iniciar'}. No se moverá hasta que presiones OK.</div>`,
+  [{t:'OK',cls:'y',f:()=>{jobs.forEach(x=>settle(x));(roster[k]=roster[k]||{name:v,ms:0});jobs.forEach(x=>{if(x!==to&&x.people.some(p=>norm(p)===k)){leave(x,v,to.name);x.people=x.people.filter(p=>norm(p)!==k)}});if(!to.people.some(p=>norm(p)===k)){to.people.push(v);enter(to,v,from.name)}save();render()}},{t:'No'}]);
+}
+function addPerson(id,inp){
+  const v=inp.value.trim().replace(/\s+/g,' ');if(!v)return;const j=find(id),k=norm(v);
+  if(j.people.some(p=>norm(p)===k)){dialog(`<h3>Ya está en este trabajo</h3><p class="q"><b>${esc(v)}</b> ya figura en «${esc(j.name)}».</p>`,[{t:'Entendido'}]);inp.value='';return}
+  const other=jobs.find(x=>x!==j&&x.people.some(p=>norm(p)===k));
+  if(other){askMove(v,other,j);return}
+  settle(j);(roster[k]=roster[k]||{name:v,ms:0});j.people.push(v);enter(j,v,'');save();render();const n=document.querySelector(`[data-pp="${id}"]`);if(n)n.focus();
+}
+function finish(j){
+  const was=!!j.start;if(was){settle(j);j.acc+=Date.now()-j.start;j.start=null;save();render()}
+  const ms=j.acc,fecha=new Date().toLocaleString('es-PE',{dateStyle:'short',timeStyle:'short'});
+  dialog(`<h3>Revisa antes de guardar</h3><div class="big">${fmt(ms)}</div><div class="hint">${words(ms)}</div>
+  <dl><dt>Trabajo</dt><dd>${esc(j.name)}</dd><dt>Tipo</dt><dd>${esc(j.tipo||'Sin tipo')}</dd><dt>A nombre de</dt><dd>${esc(j.cliente||'—')}</dd><dt>Involucrados</dt><dd>${apTxt(j)?esc(apTxt(j)):'Ninguno'}</dd><dt>Fecha</dt><dd>${esc(fecha)}</dd><dt>Evidencia</dt><dd>${(j.fotos||[]).length} foto(s)</dd></dl>${(j.fotos||[]).length?'<div class="ph">'+thumbs(j.fotos)+'</div>':'<div class="warnbox">Este trabajo no tiene fotos de evidencia.</div>'}
+  ${apTxt(j)?'':'<div class="warnbox">No agregaste involucrados a este trabajo.</div>'}
+  ${hasMove(j)?'<div class="warnbox story"><b>Historia del trabajo</b>'+storyHTML(j)+'</div>':''}
+  <p>Al confirmar, el trabajo se agrega al historial y sale de la lista de activos.</p>`,
+  [{t:'✓ Confirmar y agregar',cls:'y',f:()=>{log.unshift({fecha,name:j.name,tipo:j.tipo||'',cliente:j.cliente||'',people:j.people.slice(),aporte:Object.values(j.ap||{}).map(a=>({name:a.name,ms:a.ms})),fotos:(j.fotos||[]).slice(),ms});jobs=jobs.filter(x=>x!==j);save();render();
+     $('sum').innerHTML=`<div class="sum">Terminado: <b>${esc(j.name)}</b> (${esc(j.tipo||'sin tipo')}, a nombre de ${esc(j.cliente||'—')}) en <b>${words(ms)}</b>.${apTxt(j)?' Participaron: <b>'+esc(apTxt(j))+'</b>.':''}</div>`;window.scrollTo({top:0,behavior:'smooth'})}},
+   {t:'Volver al trabajo',f:()=>{if(was){j.start=Date.now();j.mark=j.start;save();render()}}}]);
+}
+$('jobs').onclick=e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.go){const j=find(d.go);if(j.start){settle(j);j.acc+=Date.now()-j.start;j.start=null}else{j.start=Date.now();j.mark=j.start}save();render()}
+  else if(d.mv){const[id,i]=d.mv.split(':');const from=find(id),p=from.people[+i],others=jobs.filter(x=>x!==from);
+    if(!others.length){dialog('<h3>No hay otro trabajo</h3><p class="q">Crea otro trabajo primero para poder mover a <b>'+esc(p)+'</b>.</p>',[{t:'Entendido'}]);return}
+    dialog('<h3>Mover a '+esc(p)+'</h3><p class="q">¿A qué trabajo quieres pasarla desde «'+esc(from.name)+'»?</p>',others.map(x=>({t:esc(x.name),f:()=>askMove(p,from,x)})).concat([{t:'Cancelar'}]))}
+  else if(d.rm){const[id,i]=d.rm.split(':');settle(find(id));leave(find(id),find(id).people[+i],'');find(id).people.splice(+i,1);save();render()}
+  else if(d.ap){addPerson(d.ap,document.querySelector(`[data-pp="${d.ap}"]`))}
+  else if(d.rmf){const[id,fid]=d.rmf.split(':');const j=find(id);j.fotos=j.fotos.filter(f=>f.id!==fid);save();render()}
+  else if(d.ok){finish(find(d.ok))}};
+$('jobs').onkeydown=e=>{if(e.key==='Enter'&&e.target.dataset.pp){e.preventDefault();addPerson(e.target.dataset.pp,e.target)}};
+$('copy').onclick=async()=>{
+  const rows=[['Fecha','Trabajo','Tipo','A nombre de','Involucrados','Tiempo (hh:mm:ss)','Minutos','Evidencia']].concat(log.map(r=>[r.fecha,r.name,r.tipo||'',r.cliente||'',apTxtR(r),fmt(r.ms),(r.ms/60000).toFixed(1),(r.fotos||[]).length?'Pendiente de enlace ('+r.fotos.length+' foto/s)':'Sin evidencia']));
+  const tsv=rows.map(r=>r.map(c=>String(c).replace(/[\t\n]/g,' ')).join('\t')).join('\n');
+  try{await navigator.clipboard.writeText(tsv);$('msg').textContent='Copiado. Pégalo en Google Sheets (Ctrl+V).'}catch(e){$('msg').textContent='No se pudo copiar automáticamente en este visor.'}};
+$('clr').onclick=()=>{if(!log.length)return;dialog('<h3>¿Vaciar el historial?</h3><p>Se borrarán todos los trabajos terminados.</p>',[{t:'Sí, vaciar',cls:'y',f:()=>{log=[];save();render()}},{t:'Cancelar'}])};
+let tk=0;setInterval(()=>{jobs.forEach(j=>{if(j.start){settle(j);const t=document.querySelector(`[data-t="${j.id}"]`);if(t)t.textContent=fmt(el(j));const sd=document.querySelector(`[data-s="${j.id}"]`);if(sd)sd.innerHTML='<b>Historia del trabajo</b>'+storyHTML(j)}});renderRank();if(++tk%30===0)save()},500);
+const shrink=f=>new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.6))};im.src=r.result};r.readAsDataURL(f)});
+$('jobs').onchange=async e=>{const id=e.target.dataset.ph;if(!id)return;const j=find(id);j.fotos=j.fotos||[];
+  for(const f of e.target.files){if(j.fotos.length>=6)break;try{j.fotos.push({id:Date.now().toString(36)+j.fotos.length,d:await shrink(f)})}catch(x){}}save();render()};
+document.addEventListener('click',e=>{const i=e.target.closest('img.thumb');if(i&&!i.closest('.dlg'))dialog('<h3>Evidencia</h3><img class="big-img" src="'+i.src+'" alt="Evidencia">',[{t:'Cerrar'}])});
+jobs.forEach(j=>j.people.forEach(p=>{const k=norm(p);roster[k]=roster[k]||{name:p,ms:0}}));
+jobs.forEach(j=>settle(j));
+let view=1;try{view=+localStorage.getItem('crono_v')||1}catch(e){}
+function setView(n){view=n;try{localStorage.setItem('crono_v',n)}catch(e){}$('jobs').className=n>1?'g'+n:'';document.querySelector('.layout').classList.toggle('wide',n>=3);document.querySelectorAll('.views button').forEach(b=>{b.classList.toggle('on',+b.dataset.v===n);b.setAttribute('aria-pressed',+b.dataset.v===n)})}
+document.querySelector('.views').onclick=e=>{const b=e.target.closest('button');if(b)setView(+b.dataset.v)};
+setView(view);
+$('rr').onclick=()=>dialog('<h3>¿Reiniciar tiempos del personal?</h3><p class="q">El tiempo de cada persona vuelve a 00:00:00. Los trabajos y el historial no se borran.</p>',[{t:'Sí, reiniciar',cls:'y',f:()=>{Object.values(roster).forEach(r=>r.ms=0);save();renderRank()}},{t:'Cancelar'}]);
+addEventListener('pagehide',save);
+render();
+</script>
+</body>
+</html>
